@@ -1,6 +1,7 @@
 package com.techlab.articulo;
 
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 import com.techlab.articulo.modelo.Articulo;
@@ -17,44 +18,49 @@ public class App {
 		ArrayList<Categoria> categorias = new ArrayList<>();
 		precargarCategorias(categorias);
 
-		int opcion;
+		int opcion=-1;
 		
 		
 		do{
 			mostrarMenu();
-			opcion = scanner.nextInt();
-			scanner.nextLine();
-			switch (opcion) {
-				
-				case 1:
-					ingresarArticulo(scanner, listadoArticulos, categorias);
-					break;
-				
-				case 2:
-					listarArticulos(listadoArticulos);
-					break;
-				
-				case 3:
-					consultarArticulo(scanner,listadoArticulos);
-					break;
-				case 4:
-					modificarArticulo(scanner,listadoArticulos,categorias);
-					break;
-				case 5:
-					eliminarArticulo(scanner, listadoArticulos);
-					break;
-				case 6:
-					listarCategorias(categorias);
-					break;
-				case 0:
-					System.out.print("Finalizando");
-					break;
-				default:
-					System.out.print("Valor invalido");
-					break;
-			}
+				opcion = leerEntero(scanner, "Ingrese una opción: ");
+				switch (opcion) {
+					
+					case 1:
+						ingresarArticulo(scanner, listadoArticulos, categorias);
+						break;
+					
+					case 2:
+						listarArticulos(listadoArticulos);
+						break;
+					
+					case 3:
+						consultarArticulo(scanner,listadoArticulos);
+						break;
+					case 4:
+						modificarArticulo(scanner,listadoArticulos,categorias);
+						break;
+					case 5:
+						eliminarArticulo(scanner, listadoArticulos);
+						break;
+					case 6:
+						listarCategorias(categorias);
+						break;
+					case 0:
+						System.out.print("Finalizando");
+						break;
+					default:
+						System.out.print("Error: Valor invalido");
+						break;
+				}
+				if(opcion !=0){
+				System.out.println("Presione enter para continuar");	
+				scanner.nextLine();
+				}
+			
+			
 		} while(opcion != 0);
-	
+		
 			
 		scanner.close();
 		}
@@ -89,8 +95,6 @@ public class App {
 			System.out.println("6 - Listar categorías");
 			System.out.println("0 - Salir");
 			System.out.println("======================================================");
-			System.out.print("Ingrese una opción: ");
-
 
 	};
 
@@ -116,7 +120,7 @@ public class App {
 
         } while (tipo != 1 && tipo != 2);
 
-		int codigo=  leerEntero(scanner, "Ingrese el código del artículo: ");;
+		int codigo=  leerEnteroNoNegativo(scanner, "Ingrese el código del artículo: ");;
 
 		if (buscarArticuloPorCodigo(articulos, codigo) != null) {
             System.out.println("Error: ya existe un artículo con ese código.");
@@ -174,7 +178,10 @@ public class App {
 		int codigo= leerEntero(scanner, "Ingrese el código del artículo: ");
 		
 		Articulo articulo = buscarArticuloPorCodigo(articulos, codigo);
-		System.out.println(articulo);
+		if(articulo== null){
+			System.out.println("El articulo no existe.");
+		}
+		else System.out.println(articulo);
 
 	}
 
@@ -191,6 +198,10 @@ public class App {
 		int codigo= leerEntero(scanner, "Ingrese el código del artículo: ");
 
 		Articulo articulo = buscarArticuloPorCodigo(articulos,codigo);
+		if(articulo== null){
+			System.out.println("El articulo no existe.");
+			return;
+		}
 		String nombre = leerTextoNoVacio(scanner, "Ingrese el nombre del artículo: ");
 		double precio = leerDoubleNoNegativo(scanner, "Ingrese el precio del artículo: ");
 
@@ -202,7 +213,7 @@ public class App {
 		articulo.setCategoria(categoria);
 
 		if(articulo instanceof ArticuloAlimenticio){
-			int diasParaVencimiento= leerEntero(scanner, "Ingrese los meses de garantia");
+			int diasParaVencimiento= leerEntero(scanner, "Ingrese los meses de garantia: ");
 			ArticuloAlimenticio alimenticio = (ArticuloAlimenticio) articulo;
 			alimenticio.setDiasParaVencimiento(diasParaVencimiento);
 		}
@@ -239,7 +250,8 @@ public class App {
 	}
 
 
-	public static void listarCategorias(ArrayList<Categoria> categorias) {
+	public static void listarCategorias(
+		ArrayList<Categoria> categorias) {
         System.out.println("\n--- CATEGORÍAS DISPONIBLES ---");
 
         for (Categoria categoria : categorias) {
@@ -247,6 +259,49 @@ public class App {
         }
     }
 
+
+// Metodos de Articulo
+
+
+	public static Articulo buscarArticuloPorCodigo(
+		ArrayList<Articulo> articulos, 
+		int codigo) {
+        for (Articulo articulo : articulos) {
+            if (articulo.getCodigo() == codigo) {
+                return articulo;
+            }
+        }
+        return null;
+    }
+
+	// Metodos de categorias
+
+	public static Categoria buscarCategoriaPorCodigo(
+		ArrayList<Categoria> categorias, 
+		int codigo) {
+        for (Categoria categoria : categorias) {
+            if (categoria.getCodigo() == codigo) {
+                return categoria;
+            }
+        }
+        return null;
+    }
+
+	public static Categoria pedirCategoriaExistente(
+		Scanner scanner, 
+		ArrayList<Categoria> categorias) {
+        while (true) {
+            int codigoCategoria = leerEntero(scanner, "Ingrese el código de la categoría: ");
+
+            Categoria categoria = buscarCategoriaPorCodigo(categorias, codigoCategoria);
+
+            if (categoria != null) {
+                return categoria;
+            }
+
+            System.out.println("Error: la categoría no existe.");
+        }
+    }
 
 //Metodos de lectura
 
@@ -274,17 +329,7 @@ public class App {
             return valor;
 		}
 	}
-// Metodos de Articulo
 
-
-	public static Articulo buscarArticuloPorCodigo(ArrayList<Articulo> articulos, int codigo) {
-        for (Articulo articulo : articulos) {
-            if (articulo.getCodigo() == codigo) {
-                return articulo;
-            }
-        }
-        return null;
-    }
   
 /* Metodos de lectura  */
 	public static double leerDoubleNoNegativo(Scanner scanner, String mensaje) {
@@ -298,7 +343,10 @@ public class App {
                     System.out.println("Error: el precio no puede ser negativo.");
                     continue;
                 }
-
+				if (!Double.isFinite(valor)) {
+    				System.out.println("Error: el valor es invalido");
+					continue;
+				}
                 return valor;
             } catch (NumberFormatException e) {
                 System.out.println("Error: debe ingresar un número decimal válido.");
@@ -321,36 +369,7 @@ public class App {
 	}
 
 	
-// Metodos de categorias
 
 
-
-
-	public static Categoria pedirCategoriaExistente
-	(Scanner scanner, 
-	ArrayList<Categoria> categorias) {
-        while (true) {
-            int codigoCategoria = leerEntero(scanner, "Ingrese el código de la categoría: ");
-
-            Categoria categoria = buscarCategoriaPorCodigo(categorias, codigoCategoria);
-
-            if (categoria != null) {
-                return categoria;
-            }
-
-            System.out.println("Error: la categoría no existe.");
-        }
-    }
-
-	public static Categoria buscarCategoriaPorCodigo(
-		ArrayList<Categoria> categorias, 
-		int codigo) {
-        for (Categoria categoria : categorias) {
-            if (categoria.getCodigo() == codigo) {
-                return categoria;
-            }
-        }
-        return null;
-    }
 
 }
